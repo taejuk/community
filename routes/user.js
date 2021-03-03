@@ -82,7 +82,9 @@ passport.use(
         for (var i = 0; i < communities.length; i++) {
           if (communities[i] != undefined) {
             boards = await mongoose.connection.db.collection("board");
-            var board = await boards.findOne({ name: communities[i] });
+            var board = await boards
+              .findMany({ name: communities[i] })
+              .toArray()[0];
             ids.push(board._id);
           }
         }

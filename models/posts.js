@@ -3,7 +3,7 @@ var Comment = require("./comments");
 const { Schema } = mongoose;
 
 const PostSchema = new Schema({
-  author: String,
+  author: Schema.Types.ObjectId,
   board_id: { type: Number, default: 0 },
   community: String,
   title: String,

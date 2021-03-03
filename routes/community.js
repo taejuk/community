@@ -43,7 +43,7 @@ router.route("/createPost/:name").post(async (req, res) => {
   var lastId = 0;
   if (lastPost.length == 0) {
     var post = new Post({
-      author: req.user.id,
+      author: req.user,
       title: title,
       body: body,
       community: community,
@@ -56,7 +56,7 @@ router.route("/createPost/:name").post(async (req, res) => {
     lastId = lastId + lastPost[0].board_id;
     console.log("last:", lastId);
     var post = new Post({
-      author: req.user.id,
+      author: req.user,
       title: title,
       body: body,
       board_id: lastId + 1,
@@ -92,7 +92,7 @@ router.route("/listPost/:name/:id").get(async (req, res) => {
     res.status(404).render("error", { error: "게시물이 존재하지 않습니다." });
     return;
   }
-  res.render("post", { post: post, user: req.user.id, community: community });
+  res.render("post", { post: post, user: req.user, community: community });
 });
 
 router.route("/modifyPost/:name/:id").get(async (req, res) => {
@@ -111,7 +111,7 @@ router.route("/modifyPost/:name/:id").post(async (req, res) => {
   const board_id = req.params.id;
   const community = req.params.name;
   const post = await Post.findOne({ board_id: board_id });
-  if (!req.user || req.user.id != post.author) {
+  if (!req.user || req.user != post.author) {
     res.redirect("/login");
     return;
   }
@@ -120,9 +120,30 @@ router.route("/modifyPost/:name/:id").post(async (req, res) => {
     return;
   }
   await Post.updateOne(post, { title: req.body.title, body: req.body.body });
-  res.render("post", { post: post, user: req.user.id, community: community });
+  res.render("post", { post: post, user: req.user, community: community });
   return;
 });
+
+router.route("/deletePost/:name/:id").get(async (req, res) => {
+  const board_id = req.params.id;
+  const community = req.params.name;
+  const post = await Post.findOne({ board_id: board_id });
+  if (!post) {
+    res.status(404).render("error", { error: "게시물이 존재하지 않습니다." });
+    return;
+  }
+  if (!req.user) {
+    res.redirect("/login");
+    return;
+  }
+  if (req.user != post.author) {
+    res.render("post", { post: post, user: req.user, community: community });
+  }
+  await Post.deleteOne({ board_id: board_id });
+  res.redirect(`/listPost/${community}`);
+  return;
+});
+
 router.route("/comment/:name/:id").post(async (req, res) => {
   if (!req.user) {
     res.redirect("/login");
@@ -131,7 +152,7 @@ router.route("/comment/:name/:id").post(async (req, res) => {
   var community = req.params.name;
   var board_id = req.params.id;
   var text = req.body.comment;
-  var user_id = req.user.id;
+  var user_id = req.user;
   //  const post = await Post.findOne({ board_id: board_id });
   var comment = {
     board_id: board_id,

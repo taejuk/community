@@ -9,6 +9,8 @@
             <div><%= post.body %></div>
             <% if (post.author == user) { %>
                 <a href="/modifyPost/<%= community %>/<%= post.board_id %>">수정하기</a>
+                <br>
+                <a href="/deletePost/<%= community %>/<%= post.board_id %>">삭제하기</a>
             <% } %>
         </div>
         <a href="/listPost/<%= community %>">뒤로 가기</a>

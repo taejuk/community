@@ -119,7 +119,10 @@ router.route("/modifyPost/:name/:id").post(async (req, res) => {
     res.status(404).render("error", { error: "게시물이 존재하지 않습니다." });
     return;
   }
-  await Post.updateOne(post, { title: req.body.title, body: req.body.body });
+  await Post.updateOne(
+    { board_id: board_id },
+    { title: req.body.title, body: req.body.body }
+  );
   res.render("post", { post: post, user: req.user, community: community });
   return;
 });

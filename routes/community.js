@@ -160,11 +160,11 @@ router.route("/comment/:name/:id").post(async (req, res) => {
   var community = req.params.name;
   var board_id = req.params.id;
   var text = req.body.comment;
-  var user_id = req.user;
+  var user = await User.findById(req.user);
   //  const post = await Post.findOne({ board_id: board_id });
   var comment = {
     board_id: board_id,
-    user_id: user_id,
+    user_id: user.nickname,
     text: text,
   };
 

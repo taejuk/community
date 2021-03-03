@@ -39,7 +39,8 @@ router.route("/createPost/:name").post(async (req, res) => {
     res.render("createPost", { error: "내용을 입력해주세요" });
     return;
   }
-  var anon = req.body.anon == undefined ? false : true;
+  console.log("anon:");
+  var anon = req.body.anon == "anon" ? true : false;
   const lastPost = await Post.find().sort({ board_id: -1 });
   var lastId = 0;
   if (lastPost.length == 0) {

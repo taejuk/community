@@ -79,7 +79,7 @@ passport.use(
           req.body.community3,
         ];
         var ids = [];
-        /*
+
         for (var i = 0; i < communities.length; i++) {
           if (communities[i] != undefined) {
             boards = await mongoose.connection.db.collection("board");
@@ -88,7 +88,6 @@ passport.use(
             ids.push(board._id);
           }
         }
-        */
 
         var user = new User({
           id: id,

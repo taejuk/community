@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=, initial-scale=1.0">
+    <script src="/socket.io/socket.io.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.min.js"
+      integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+      crossorigin="anonymous"
+    ></script>
+    <title>chatting</title>
+    <script>
+        var host = 'localhost';
+        var port = '3000';
+        var socket;
+        connectToServer();
+        $(function() {
+            $("#sendButton").bind('click', function(event) {
+                var chattype = 'chat';
+
+                var recepient = $('#recepientInput').val();
+                var data = $('#dataInput').val();
+
+                var output = {recepient: recepient, command: chattype, type: 'text', data: data};
+                console.log(`서버로 보낼 데이터: ${JSON.stringify(output)}`);
+
+                if(socket == undefined) {
+                    alert('서버에 연결되어 있지 않습니다. 먼저 서버에 연결하세요.');
+                    return;
+                }
+
+                socket.emit('message', output);
+            })
+        });
+
+        function connectToServer() {
+            var options = {'forceNew': true};
+            var url = `http://${host}:${port}`;
+            socket = io.connect(url, options);
+
+            socket.on('connect', function(){
+                println(`웹 소켓 서버에 연결되었습니다. ${url}`);
+                socket.on('message', function(message) {
+                    console.log(JSON.stringify(message));
+
+                    println(`<p>수신메시지: ${message.sender}: ${message.data}</p>`);
+                });
+                socket.on('room', function(data) {
+                    console.log(JSON.stringify(data));
+
+                    println(`<p>방 이벤트: ${data.command}</p>`);
+                    println('<p>방 리스트를 받았습니다. </p>');
+
+                    if(data.command == 'list') {
+                        var roomCount = data.rooms.length;
+                        $("#roomList").html(`<p>방 리스트: ${roomCount}개`);
+                        for(var i = 0; i<roomCount; i++) {
+                            $("#roomList").append(`<p>방 #${i}: ${data.rooms[i]}</p>`)
+                        }
+                    }
+                })
+            })
+            socket.on('disconnect', function() {
+                println('웹 소켓 연결이 종료되었습니다.');
+            })
+        }
+        function println(data) {
+            console.log(data);
+            $('#result').append(`<p>${data}</p>`);
+        }
+    </script>
+</head>
+<body>
+    <h3>채팅 클라이언트</h3>
+    <h4>현재 사용자: <%= nickname %></h4>
+    <br>
+    <div>
+        <input type="button" id="joinRoomButton" value="방 입장하기" />
+        <input type="button" id="leaveRoomButton" value="방 나가기" />
+    </div>
+    <div id="roomList">
+
+    </div>
+      <br>
+      <div>
+      <div>
+        <span>상대방 아이디: </span>
+        <input type="text" id = "recepientInput" placeholder="방을 선택해주세요.">
+      </div>
+
+      <div>
+      <span>메시지:</span>
+      <input type="text" id = "dataInput" placeholder="메시지를 입력해주세요." />
+      </div>
+      <br />
+      <input type="button" id = "sendButton" value="전송" />
+      </div>
+    <br>
+    <hr/>
+    <p>결과:</p>
+    <div id="result"></div>
+</body>
+</html>

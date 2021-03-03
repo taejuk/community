@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <p>스터디 그룹 리스트</p>
+    <% for (var i = 0 ; i < studygroup.length ; i++ ) { %>
+        <p><%= studygroup[i].name %></p>
+    <% } %>
+    <br>
+    <a href="/createstudygroup">스터디 그룹 생성</a>
+    <br>
+    <a href="/studygroup">스터디 그룹 찾기</a>
+</body>
+</html>

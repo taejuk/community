@@ -111,12 +111,16 @@ router.route("/modifyPost/:name/:id").post(async (req, res) => {
   const board_id = req.params.id;
   const community = req.params.name;
   const post = await Post.findOne({ board_id: board_id });
-  if (!req.user || req.user != post.author) {
+  if (!req.user) {
     res.redirect("/login");
     return;
   }
   if (!post) {
     res.status(404).render("error", { error: "게시물이 존재하지 않습니다." });
+    return;
+  }
+  if (req.user != post.author) {
+    res.render("post", { post: post, user: req.user, community: community });
     return;
   }
   await Post.updateOne(
@@ -141,6 +145,7 @@ router.route("/deletePost/:name/:id").get(async (req, res) => {
   }
   if (req.user != post.author) {
     res.render("post", { post: post, user: req.user, community: community });
+    return;
   }
   await Post.deleteOne({ board_id: board_id });
   res.redirect(`/listPost/${community}`);

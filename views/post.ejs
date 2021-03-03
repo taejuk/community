@@ -27,7 +27,7 @@
             <% if (post.comments != null) { %>
                 <div>댓글 보이기</div>
             <% for (var i = 0; i < Object.keys(post.comments).length; i++) { %>   
-                <p>-- <%= post.comments[i].text %>: 작성자: <</p>
+                <p>-- <%= post.comments[i].text %>: 작성자: <%= post.comments[i].user_id %></p>
                 <div>
                     <% for (var j = 0; j < Object.keys(post.comments[i].recomment).length; j++) { %>
                         <p>---- <%= post.comments[i].recomment[j].text %></p>

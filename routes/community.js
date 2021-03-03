@@ -127,7 +127,7 @@ router.route("/modifyPost/:name/:id").post(async (req, res) => {
     { board_id: board_id },
     { title: req.body.title, body: req.body.body }
   );
-  res.render("post", { post: post, user: req.user, community: community });
+  res.redirect(`listPost/${community}/${board_id}`);
   return;
 });
 

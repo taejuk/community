@@ -39,6 +39,7 @@ router.route("/createPost/:name").post(async (req, res) => {
     res.render("createPost", { error: "내용을 입력해주세요" });
     return;
   }
+  var anon = req.body.anon == undefined ? false : true;
   const lastPost = await Post.find().sort({ board_id: -1 });
   var lastId = 0;
   if (lastPost.length == 0) {
@@ -47,6 +48,7 @@ router.route("/createPost/:name").post(async (req, res) => {
       title: title,
       body: body,
       community: community,
+      anon: anon,
     });
     await User.updateOne({ _id: req.user }, { $push: { mypost: post._id } });
     await post.save();
@@ -55,6 +57,7 @@ router.route("/createPost/:name").post(async (req, res) => {
   } else {
     lastId = lastId + lastPost[0].board_id;
     console.log("last:", lastId);
+
     var post = new Post({
       author: req.user,
       title: title,

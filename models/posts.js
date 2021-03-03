@@ -8,6 +8,7 @@ const PostSchema = new Schema({
   community: String,
   title: String,
   body: String,
+  anon: { type: Boolean, default: false },
   date: { type: Date, default: Date.now },
   comments: [Comment],
 });

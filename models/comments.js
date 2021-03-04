@@ -5,6 +5,7 @@ var recommentSchema = new Schema({
   comment_id: Schema.Types.ObjectId,
   nickname: String,
   text: String,
+  anon: { type: Boolean, default: false },
 });
 var Comment = new Schema({
   board_id: Number,
@@ -14,6 +15,7 @@ var Comment = new Schema({
   create_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
   recomment: [recommentSchema],
+  anon: { type: Boolean, default: false },
 });
 
 module.exports = Comment;

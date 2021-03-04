@@ -2,6 +2,7 @@ const express = require("express");
 const Joi = require("@hapi/joi");
 const Post = require("../models/posts");
 const User = require("../models/user");
+const { checkPreferences } = require("@hapi/joi");
 
 var router = express.Router();
 
@@ -39,8 +40,8 @@ router.route("/createPost/:name").post(async (req, res) => {
     res.render("createPost", { error: "내용을 입력해주세요" });
     return;
   }
-  console.log("anon:");
-  var anon = req.body.anon == "anon" ? true : false;
+  var anon = req.body.anon == undefined ? false : true;
+  console.log(`anon: ${anon}`);
   const lastPost = await Post.find().sort({ board_id: -1 });
   var lastId = 0;
   if (lastPost.length == 0) {
@@ -65,6 +66,7 @@ router.route("/createPost/:name").post(async (req, res) => {
       body: body,
       board_id: lastId + 1,
       community: community,
+      anon: anon,
     });
     await post.save();
     await User.updateOne({ _id: req.user }, { $push: { mypost: post._id } });
@@ -96,7 +98,24 @@ router.route("/listPost/:name/:id").get(async (req, res) => {
     res.status(404).render("error", { error: "게시물이 존재하지 않습니다." });
     return;
   }
-  res.render("post", { post: post, user: req.user, community: community });
+  if (post.anon == false) {
+    const user = await User.findById(req.user);
+    res.render("post", {
+      post: post,
+      user: req.user,
+      community: community,
+      nickname: user.nickname,
+    });
+    return;
+  } else {
+    res.render("post", {
+      post: post,
+      user: req.user,
+      community: community,
+      nickname: "익명 작성자",
+    });
+    return;
+  }
 });
 
 router.route("/modifyPost/:name/:id").get(async (req, res) => {
@@ -124,7 +143,7 @@ router.route("/modifyPost/:name/:id").post(async (req, res) => {
     return;
   }
   if (req.user != post.author) {
-    res.render("post", { post: post, user: req.user, community: community });
+    res.redirect(`/listPost/${community}/${board_id}`);
     return;
   }
   await Post.updateOne(
@@ -148,7 +167,7 @@ router.route("/deletePost/:name/:id").get(async (req, res) => {
     return;
   }
   if (req.user != post.author) {
-    res.render("post", { post: post, user: req.user, community: community });
+    res.redirect(`/listPost/${community}`);
     return;
   }
   await Post.deleteOne({ board_id: board_id });
@@ -165,17 +184,58 @@ router.route("/comment/:name/:id").post(async (req, res) => {
   var board_id = req.params.id;
   var text = req.body.comment;
   var user = await User.findById(req.user);
-  //  const post = await Post.findOne({ board_id: board_id });
+  var anon = req.body.anonComment == undefined ? false : true;
   var comment = {
     board_id: board_id,
     user_id: user.nickname,
     text: text,
+    anon: anon,
   };
-
-  await Post.updateOne(
-    { board_id: board_id },
-    { $push: { comments: comment } }
-  );
+  if (anon == false) {
+    await Post.updateOne(
+      { board_id: board_id },
+      { $push: { comments: comment } }
+    );
+  } else {
+    var post = await Post.findOne({ board_id });
+    var exists = false;
+    var anonNums = post.comments_anon_number;
+    var anonNickname;
+    if (post.author == req.user) {
+      anonNickname = "익명 작성자";
+    } else {
+      for (var i = 0; i < post.comments_anon_user_list.length; i++) {
+        if (post.comments_anon_user_list[i].user_id == req.user) {
+          exists = true;
+          anonNickname = post.comments_anon_user_list[i].anon_nickname;
+          break;
+        }
+      }
+      if (exists == false) {
+        anonNums = anonNums + 1;
+        anonNickname = `익명 ${anonNums}`;
+      }
+    }
+    var comment = {
+      board_id: board_id,
+      user_id: anonNickname,
+      text: text,
+      anon: anon,
+    };
+    await Post.updateOne(
+      { board_id: board_id },
+      {
+        $set: { comments_anon_number: anonNums },
+        $push: {
+          comments_anon_user_list: {
+            user_id: req.user,
+            anon_nickname: anonNickname,
+          },
+          comments: comment,
+        },
+      }
+    );
+  }
   res.redirect(`/listPost/${community}/${board_id}`);
   return;
 });
@@ -187,10 +247,36 @@ router
     const comment_id = req.params.comment_id;
     const community = req.params.name;
     var user = await User.findById(req.user);
-    const recomment = {
+    var anon = req.body.anonRecomment == undefined ? false : true;
+    var nickname;
+    var recomment;
+    var post = await Post.findOne({ board_id: board_id });
+    var anonNums = post.comments_anon_number;
+    if (anon == true) {
+      if (post.author == req.user) {
+        nickname = "익명 작성자";
+      } else {
+        exists = false;
+        for (var i = 0; i < post.comments_anon_user_list.length; i++) {
+          if (post.comments_anon_user_list[i].user_id == req.user) {
+            exists = true;
+            nickname = post.comments_anon_user_list[i].anon_nickname;
+            break;
+          }
+        }
+        if (exists == false) {
+          anonNums = anonNums + 1;
+          nickname = `익명 ${anonNums}`;
+        }
+      }
+    } else {
+      nickname = user.nickname;
+    }
+    recomment = {
       comment_id: comment_id,
       text: text,
-      nickname: user.nickname,
+      nickname: nickname,
+      anon: anon,
     };
     (await Post.find({ board_id: board_id })).forEach(function (post) {
       post.comments.forEach(async function (comment) {

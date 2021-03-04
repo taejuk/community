@@ -11,6 +11,10 @@ const PostSchema = new Schema({
   anon: { type: Boolean, default: false },
   date: { type: Date, default: Date.now },
   comments: [Comment],
+  comments_anon_user_list: [
+    { user_id: Schema.Types.ObjectId, anon_nickname: String },
+  ],
+  comments_anon_number: { type: Number, default: 0 },
 });
 
 const Post = mongoose.model("Post", PostSchema);
